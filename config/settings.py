@@ -75,3 +75,11 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+# ── RAG Pipeline (Phase 3) ────────────────────────────────
+hybrid_top_k: int = Field(default=20, alias="HYBRID_TOP_K")
+rerank_top_k: int = Field(default=5,  alias="RERANK_TOP_K")
+reranker_model: str = Field(default="cross-encoder/ms-marco-MiniLM-L-6-v2", alias="RERANKER_MODEL")
+llm_model: str = Field(default="gpt-4o-mini", alias="LLM_MODEL")
+llm_temperature: float = Field(default=0.2, alias="LLM_TEMPERATURE")
