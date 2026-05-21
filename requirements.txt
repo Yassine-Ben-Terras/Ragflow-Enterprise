@@ -26,3 +26,7 @@ qdrant-client>=1.9              # Qdrant (default)
 pytest>=7.4
 pytest-mock>=3.12
 ruff>=0.3
+
+# ── RAG Pipeline — Phase 3 ───────────────────────────────
+rank-bm25>=0.2.2             # BM25 sparse retrieval
+sentence-transformers>=2.7   # cross-encoder reranker (also used by BGE-M3)
