@@ -82,3 +82,42 @@ docker-compose.yml           Local Qdrant + Postgres containers
 pytest tests/ -v
 ruff check .
 ```
+
+## Phase 3 — RAG Pipeline
+
+```
+rag/
+├── retriever/
+│   ├── dense_retriever.py       Semantic search via vector store (Phase 2)
+│   ├── bm25_retriever.py        BM25 sparse retrieval over local chunks
+│   └── hybrid_retriever.py      RRF fusion of dense + BM25, weighted
+├── reranker/
+│   └── cross_encoder_reranker.py  ms-marco-MiniLM cross-encoder, lazy loaded
+├── prompt/
+│   └── prompt_builder.py        [SOURCE N] citation blocks, context budget trim
+└── pipeline.py                  Orchestrator + CLI  (python -m rag.pipeline -q "...")
+```
+
+### Usage
+
+```bash
+# Ask a question via CLI
+python -m rag.pipeline --query "What is the deployment process?" --rerank-top-k 5
+
+# Import in Python
+from rag.pipeline import RAGPipeline
+pipeline = RAGPipeline()
+response = pipeline.query("How does authentication work?")
+print(response.pretty())
+```
+
+### Pipeline flow
+
+```
+query
+  ↓  HybridRetriever (dense top-20 + BM25 top-20 → RRF fusion → top-20)
+  ↓  CrossEncoderReranker (ms-marco-MiniLM → top-5)
+  ↓  PromptBuilder ([SOURCE N] labels, 12k char budget)
+  ↓  OpenAI gpt-4o-mini
+  ↓  RAGResponse { answer, citations[] }
+```
