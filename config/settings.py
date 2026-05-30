@@ -19,12 +19,9 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # ── AWS / S3 ──────────────────────────────────────────
-    aws_access_key_id: str = Field(default="", alias="AWS_ACCESS_KEY_ID")
-    aws_secret_access_key: str = Field(default="", alias="AWS_SECRET_ACCESS_KEY")
-    aws_region: str = Field(default="us-east-1", alias="AWS_REGION")
-    s3_bucket_name: str = Field(default="ragflow-documents", alias="S3_BUCKET_NAME")
-    s3_prefix: str = Field(default="raw/", alias="S3_PREFIX")
+    # ── Local paths ───────────────────────────────────────
+    data_dir: str = Field(default="data", alias="DATA_DIR")
+    pdf_source_dir: str = Field(default="", alias="PDF_SOURCE_DIR")
 
     # ── Confluence ────────────────────────────────────────
     confluence_url: str = Field(default="", alias="CONFLUENCE_URL")
@@ -34,7 +31,7 @@ class Settings(BaseSettings):
 
     @field_validator("confluence_spaces", mode="before")
     @classmethod
-    def split_confluence_spaces(cls, v: str | List[str]) -> List[str]:
+    def split_confluence_spaces(cls, v):
         if isinstance(v, str):
             return [s.strip() for s in v.split(",") if s.strip()]
         return v
@@ -49,7 +46,7 @@ class Settings(BaseSettings):
 
     @field_validator("git_repos", "git_file_extensions", mode="before")
     @classmethod
-    def split_comma_list(cls, v: str | List[str]) -> List[str]:
+    def split_comma_list(cls, v):
         if isinstance(v, str):
             return [s.strip() for s in v.split(",") if s.strip()]
         return v
@@ -59,9 +56,22 @@ class Settings(BaseSettings):
     chunk_overlap: int = Field(default=64, alias="CHUNK_OVERLAP")
     chunking_strategy: str = Field(default="recursive", alias="CHUNKING_STRATEGY")
 
+    # ── Embeddings (Phase 2) ──────────────────────────────
+    embedding_provider: str = Field(default="openai", alias="EMBEDDING_PROVIDER")   # openai | bge
+    openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
+    openai_embedding_model: str = Field(default="text-embedding-3-small", alias="OPENAI_EMBEDDING_MODEL")
+    bge_model_name: str = Field(default="BAAI/bge-m3", alias="BGE_MODEL_NAME")
+    embedding_batch_size: int = Field(default=64, alias="EMBEDDING_BATCH_SIZE")
+
+    # ── Vector store (Phase 2) ────────────────────────────
+    vector_store: str = Field(default="qdrant", alias="VECTOR_STORE")               # qdrant | pgvector
+    qdrant_host: str = Field(default="localhost", alias="QDRANT_HOST")
+    qdrant_port: int = Field(default=6333, alias="QDRANT_PORT")
+    qdrant_collection: str = Field(default="ragflow", alias="QDRANT_COLLECTION")
+    pgvector_dsn: str = Field(default="postgresql://ragflow:ragflow@localhost:5432/ragflow", alias="PGVECTOR_DSN")
+
     # ── Logging ───────────────────────────────────────────
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
 
-# Singleton – import this everywhere
 settings = Settings()
