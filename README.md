@@ -5,60 +5,80 @@
 ## Architecture
 
 ```
-Phase 1 — Ingestion      : PDF / Confluence / Git connectors, chunking, S3, Airflow DAG
+Phase 1 — Ingestion      : PDF / Confluence / Git connectors, chunking, local storage
 Phase 2 — Embeddings     : OpenAI / BGE-M3 vectors, PGVector / Qdrant (HNSW), <100ms search
 Phase 3 — RAG Pipeline   : Hybrid retriever (dense + BM25), cross-encoder reranking, citations
 Phase 4 — API + UI       : FastAPI SSE streaming, Streamlit / Next.js chat, Docker
 Phase 5 — Monitoring     : Grafana dashboard, RAGAs evaluation, feedback loop
 ```
 
+## Quick Start
+
+```bash
+cp .env.example .env
+
+# 1 — install dependencies
+pip install -r requirements.txt
+
+# 2 — start vector store (pick one)
+docker compose up qdrant       # default
+docker compose up postgres     # for pgvector
+
+# 3 — ingest documents
+python -m ingestion.run
+
+# 4 — embed and index
+python -m embeddings.pipeline
+```
+
 ## Phase 1 — Ingestion
 
-### Structure
 ```
 ingestion/
 ├── connectors/
-│   ├── base.py            # Abstract base connector
-│   ├── pdf_connector.py   # PDF ingestion (local + S3)
-│   ├── confluence.py      # Confluence REST API connector
-│   └── git_connector.py   # Git repository connector
+│   ├── base.py              AbstractConnector + Document dataclass
+│   ├── pdf_connector.py     Local PDF ingestion (pdfplumber)
+│   ├── confluence.py        Confluence REST API v2
+│   └── git_connector.py     Git shallow clone + file walker
 ├── chunking/
-│   └── smart_chunker.py   # Semantic + recursive chunking strategies
+│   └── smart_chunker.py     Recursive / sentence / semantic strategies
 ├── storage/
-│   └── s3_storage.py      # S3 upload / download / listing
-airflow/
-├── dags/
-│   └── ingestion_dag.py   # Daily ingestion Airflow DAG
-config/
-└── settings.py            # Central settings (pydantic-settings)
+│   └── local_storage.py     JSON + JSONL on local filesystem (data/)
+└── run.py                   Orchestrator
+airflow/dags/ingestion_dag.py  Daily Airflow DAG
 ```
 
-### Quick Start
+## Phase 2 — Embeddings
 
-```bash
-cp .env.example .env          # fill in your secrets
-pip install -r requirements.txt
-python -m ingestion.run       # one-shot ingestion run
+```
+embeddings/
+├── providers/
+│   ├── base.py              BaseEmbedder ABC
+│   ├── openai_embedder.py   OpenAI text-embedding-3-small / large
+│   └── bge_embedder.py      BAAI/bge-m3 local model (sentence-transformers)
+├── stores/
+│   ├── base.py              BaseVectorStore ABC
+│   ├── qdrant_store.py      Qdrant + HNSW (default)
+│   └── pgvector_store.py    PostgreSQL + pgvector + HNSW
+└── pipeline.py              Orchestrator: chunks → embed → upsert
+docker-compose.yml           Local Qdrant + Postgres containers
 ```
 
-### Environment Variables
+## Environment Variables
 
-| Variable | Description |
-|---|---|
-| `AWS_ACCESS_KEY_ID` | AWS credentials |
-| `AWS_SECRET_ACCESS_KEY` | AWS credentials |
-| `S3_BUCKET_NAME` | Target S3 bucket |
-| `CONFLUENCE_URL` | Confluence base URL |
-| `CONFLUENCE_USERNAME` | Confluence username / email |
-| `CONFLUENCE_API_TOKEN` | Confluence API token |
-| `GIT_REPOS` | Comma-separated list of repo URLs |
+| Variable | Default | Description |
+|---|---|---|
+| `DATA_DIR` | `data` | Local storage root |
+| `PDF_SOURCE_DIR` | `` | Folder with PDF files |
+| `EMBEDDING_PROVIDER` | `openai` | `openai` or `bge` |
+| `OPENAI_API_KEY` | `` | Required when provider=openai |
+| `VECTOR_STORE` | `qdrant` | `qdrant` or `pgvector` |
+| `QDRANT_HOST` | `localhost` | Qdrant server host |
+| `PGVECTOR_DSN` | `...` | PostgreSQL connection string |
 
 ## Development
 
 ```bash
-# Run tests
 pytest tests/ -v
-
-# Lint
 ruff check .
 ```
