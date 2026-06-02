@@ -169,3 +169,56 @@ data: {"type": "token",    "content": " is 42"}
 data: {"type": "citation", "content": "{...CitationSchema...}"}
 data: {"type": "done",     "content": ""}
 ```
+
+## Phase 5 — Monitoring
+
+```
+monitoring/
+├── metrics.py                     Prometheus counters + histograms (all pipeline stages)
+├── instrumented_pipeline.py       Drop-in RAGPipeline wrapper with per-stage timing
+├── ragas/
+│   └── evaluator.py               LLM-as-judge: faithfulness + answer relevancy scores
+├── feedback/
+│   ├── feedback_store.py          JSONL persistence + Prometheus counter for thumbs up/down
+│   └── feedback_loop.py           Daily batch: negative feedback → RAGAs eval → improvement report
+├── prometheus/
+│   └── prometheus.yml             Scrape config (scrapes /monitoring/metrics every 15s)
+└── grafana/
+    ├── dashboards/ragflow_overview.json   Pre-built dashboard (latency, RAGAs, feedback, errors)
+    └── provisioning/               Auto-wired datasource + dashboard on first boot
+api/routers/monitoring.py          GET /monitoring/metrics  POST /feedback  POST /eval  GET summaries
+airflow/dags/feedback_loop_dag.py  Daily 03:00 UTC DAG — process feedback → improvement report
+```
+
+### All services
+
+```bash
+docker compose up --build
+
+# Endpoints
+# API        → http://localhost:8000
+# UI         → http://localhost:8501
+# Prometheus → http://localhost:9090
+# Grafana    → http://localhost:3000  (admin / ragflow)
+```
+
+### Monitoring API
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/monitoring/metrics` | GET | Prometheus scrape endpoint |
+| `/monitoring/feedback` | POST | Submit thumbs_up / thumbs_down |
+| `/monitoring/feedback/summary` | GET | Satisfaction rate + counts |
+| `/monitoring/eval` | POST | Run RAGAs on a single response |
+| `/monitoring/eval/summary` | GET | Mean faithfulness + relevancy |
+
+### RAGAs Metrics
+
+| Metric | Target | Description |
+|---|---|---|
+| Faithfulness | ≥ 0.8 | Claims in answer supported by context |
+| Answer Relevancy | ≥ 0.8 | Answer actually addresses the question |
+
+### Feedback Loop
+
+Runs daily at 03:00 UTC via Airflow. Identifies low-scoring responses and classifies failures as either **retrieval** (noisy chunks → re-tune chunking) or **prompt/LLM** (answer ignores context → revise system prompt).
