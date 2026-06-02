@@ -9,17 +9,17 @@ from __future__ import annotations
 import logging
 
 from config.settings import settings
-from rag.pipeline import RAGPipeline
+from monitoring.instrumented_pipeline import InstrumentedPipeline
 
 logger = logging.getLogger(__name__)
 
 
 class AppState:
-    pipeline: RAGPipeline | None = None
+    pipeline: InstrumentedPipeline | None = None
 
     @classmethod
     def init(cls) -> None:
-        cls.pipeline = RAGPipeline(
+        cls.pipeline = InstrumentedPipeline(
             hybrid_top_k=settings.hybrid_top_k,
             rerank_top_k=settings.rerank_top_k,
             data_dir=settings.data_dir,

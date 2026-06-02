@@ -20,7 +20,7 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import chat, health, sources
+from api.routers import chat, health, monitoring, sources
 from api.state import AppState
 
 logger = logging.getLogger(__name__)
@@ -60,6 +60,7 @@ def create_app() -> FastAPI:
     # ── Routers ───────────────────────────────────────────────────────────
     app.include_router(health.router, tags=["Health"])
     app.include_router(chat.router,   prefix="/chat",   tags=["Chat"])
+    app.include_router(monitoring.router, prefix="/monitoring", tags=["Monitoring"])
     app.include_router(sources.router, prefix="/sources", tags=["Sources"])
 
     return app
