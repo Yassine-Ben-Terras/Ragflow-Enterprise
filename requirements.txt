@@ -30,3 +30,9 @@ ruff>=0.3
 # ── RAG Pipeline — Phase 3 ───────────────────────────────
 rank-bm25>=0.2.2             # BM25 sparse retrieval
 sentence-transformers>=2.7   # cross-encoder reranker (also used by BGE-M3)
+
+# ── API + UI — Phase 4 ───────────────────────────────────
+fastapi>=0.111
+uvicorn[standard]>=0.29
+httpx>=0.27           # async HTTP + TestClient
+streamlit>=1.35
