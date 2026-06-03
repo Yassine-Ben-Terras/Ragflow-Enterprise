@@ -121,3 +121,51 @@ query
   ↓  OpenAI gpt-4o-mini
   ↓  RAGResponse { answer, citations[] }
 ```
+
+## Phase 4 — API + UI
+
+```
+api/
+├── main.py              FastAPI app factory, lifespan, CORS
+├── state.py             Singleton RAGPipeline (loaded once at startup)
+├── schemas.py           Pydantic v2 request/response models
+└── routers/
+    ├── health.py        GET  /health
+    ├── chat.py          POST /chat  (JSON)  +  POST /chat/stream  (SSE)
+    └── sources.py       GET  /sources
+ui/streamlit/
+└── app.py               Streamlit chat UI — streaming, citations panel, sidebar stats
+Dockerfile.api           FastAPI container
+Dockerfile.ui            Streamlit container
+docker-compose.yml       All services: qdrant + postgres + api + ui
+```
+
+### Quick Start (local, no Docker)
+
+```bash
+# Terminal 1 — API
+uvicorn api.main:app --reload --port 8000
+
+# Terminal 2 — UI
+streamlit run ui/streamlit/app.py
+```
+
+### Quick Start (Docker)
+
+```bash
+docker compose up --build
+# API  → http://localhost:8000
+# UI   → http://localhost:8501
+# Docs → http://localhost:8000/docs
+```
+
+### SSE Stream Protocol
+
+```
+POST /chat/stream  →  text/event-stream
+
+data: {"type": "token",    "content": "The answer"}
+data: {"type": "token",    "content": " is 42"}
+data: {"type": "citation", "content": "{...CitationSchema...}"}
+data: {"type": "done",     "content": ""}
+```
