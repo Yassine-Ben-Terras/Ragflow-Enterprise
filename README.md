@@ -188,6 +188,7 @@ ragflow-enterprise/
 
 ## Quick Start
 
+
 ```bash
 # 1. Clone and configure
 git clone https://github.com/Yassine-Ben-Terras/Ragflow-Enterprise.git
@@ -259,7 +260,7 @@ data/
 
 ## Phase 2 — Embeddings
 
-Loads all chunks from local storage, generates vector embeddings, and upserts them into a vector store with HNSW indexing for sub-100ms similarity search.
+Loads all chunks from local storage, generates vector embeddings, and upserts them into a vector store with HNSW indexing for sub-100ms similarity search .
 
 ```bash
 python -m embeddings.pipeline
@@ -317,7 +318,7 @@ PromptBuilder
 
 ---
 
-## Phase 4 — API & UI
+## Phase 4 —  API & UI
 
 A production FastAPI backend with SSE streaming and a Streamlit chat interface.
 
@@ -504,4 +505,4 @@ docker compose up prometheus grafana -d  # monitoring stack only
 
 ## License
 
-MIT License — see `LICENSE` for details.
+MIT License 
