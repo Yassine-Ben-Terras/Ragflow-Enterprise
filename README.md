@@ -190,7 +190,7 @@ ragflow-enterprise/
 
 ```bash
 # 1. Clone and configure
-git clone https://github.com/your-org/ragflow-enterprise.git
+git clone https://github.com/Yassine-Ben-Terras/Ragflow-Enterprise.git
 cd ragflow-enterprise
 cp .env.example .env
 # → Edit .env: set OPENAI_API_KEY and PDF_SOURCE_DIR at minimum
